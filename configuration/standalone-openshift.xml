@@ -1,7 +1,6 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" ?>
 
 <server xmlns="urn:jboss:domain:4.1">
-
     <extensions>
         <extension module="org.jboss.as.clustering.infinispan"/>
         <extension module="org.jboss.as.connector"/>
@@ -30,7 +29,6 @@
         <extension module="org.wildfly.extension.security.manager"/>
         <extension module="org.wildfly.extension.undertow"/>
     </extensions>
-
     <management>
         <security-realms>
             <security-realm name="ManagementRealm">
@@ -80,7 +78,6 @@
             </role-mapping>
         </access-control>
     </management>
-
     <profile>
         <subsystem xmlns="urn:jboss:domain:logging:3.0">
             <console-handler name="CONSOLE">
@@ -134,28 +131,17 @@
         <subsystem xmlns="urn:jboss:domain:bean-validation:1.0"/>
         <subsystem xmlns="urn:jboss:domain:datasources:4.0">
             <datasources>
-                <datasource jndi-name="java:/jboss/jdbc/CPOSSDS" pool-name="CPOSSDS" enabled="true">
-                    <connection-url>${CPOSSDS_JDBC_URL}</connection-url>
-                    <driver>oracle</driver>
-                    <pool>
-                        <min-pool-size>0</min-pool-size>
-                        <max-pool-size>20</max-pool-size>
-                    </pool>
+                <datasource jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS" enabled="true" use-java-context="true">
+                    <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url>
+                    <driver>h2</driver>
                     <security>
-                        <user-name>${CPOSSDS_JDBC_USER}</user-name>
-                        <password>${CPOSSDS_JDBC_PW}</password>
+                        <user-name>sa</user-name>
+                        <password>sa</password>
                     </security>
-                    <timeout>
-                        <idle-timeout-minutes>30</idle-timeout-minutes>
-                    </timeout>
                 </datasource>
-               
                 <drivers>
                     <driver name="h2" module="com.h2database.h2">
                         <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
-                    </driver>
-                    <driver name="oracle" module="com.oracle.ojdbc7">
-                        <xa-datasource-class>oracle.jdbc.driver.OracleDriver</xa-datasource-class>
                     </driver>
                 </drivers>
             </datasources>
@@ -179,7 +165,7 @@
                     <managed-scheduled-executor-service name="default" jndi-name="java:jboss/ee/concurrency/scheduler/default" context-service="default" hung-task-threshold="60000" keepalive-time="3000"/>
                 </managed-scheduled-executor-services>
             </concurrent>
-            <default-bindings context-service="java:jboss/ee/concurrency/context/default" managed-executor-service="java:jboss/ee/concurrency/executor/default" managed-scheduled-executor-service="java:jboss/ee/concurrency/scheduler/default" managed-thread-factory="java:jboss/ee/concurrency/factory/default"/>
+            <default-bindings context-service="java:jboss/ee/concurrency/context/default" datasource="java:jboss/datasources/ExampleDS" managed-executor-service="java:jboss/ee/concurrency/executor/default" managed-scheduled-executor-service="java:jboss/ee/concurrency/scheduler/default" managed-thread-factory="java:jboss/ee/concurrency/factory/default"/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:ejb3:4.0">
             <session-bean>
@@ -191,6 +177,7 @@
             </session-bean>
             <pools>
                 <bean-instance-pools>
+                    <!-- Automatically configure pools. Alternatively, max-pool-size can be set to a specific value -->
                     <strict-max-pool name="slsb-strict-max-pool" derive-size="from-worker-pools" instance-acquisition-timeout="5" instance-acquisition-timeout-unit="MINUTES"/>
                     <strict-max-pool name="mdb-strict-max-pool" derive-size="from-cpu-count" instance-acquisition-timeout="5" instance-acquisition-timeout-unit="MINUTES"/>
                 </bean-instance-pools>
@@ -349,13 +336,6 @@
                         <auth-module code="Dummy"/>
                     </authentication-jaspi>
                 </security-domain>
-                <security-domain name="coxad" cache-type="default">
-                    <authentication>
-                        <login-module code="RealmDirect" flag="sufficient">
-                            <module-option name="password-stacking" value="useFirstPass"/>
-                        </login-module>                       
-                    </authentication>
-                </security-domain>
             </security-domains>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:transactions:3.0">
@@ -400,7 +380,6 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:weld:3.0"/>
     </profile>
-
     <interfaces>
         <interface name="management">
             <inet-address value="${jboss.bind.address.management:127.0.0.1}"/>
@@ -409,7 +388,6 @@
             <inet-address value="${jboss.bind.address:127.0.0.1}"/>
         </interface>
     </interfaces>
-
     <socket-binding-group name="standard-sockets" default-interface="public" port-offset="${jboss.socket.binding.port-offset:0}">
         <socket-binding name="management-http" interface="management" port="${jboss.management.http.port:9990}"/>
         <socket-binding name="management-https" interface="management" port="${jboss.management.https.port:9993}"/>
@@ -419,8 +397,7 @@
         <socket-binding name="txn-recovery-environment" port="4712"/>
         <socket-binding name="txn-status-manager" port="4713"/>
         <outbound-socket-binding name="mail-smtp">
-            <remote-destination host="smtpmail.cox.com" port="25"/>
+            <remote-destination host="localhost" port="25"/>
         </outbound-socket-binding>
     </socket-binding-group>
-
 </server>
